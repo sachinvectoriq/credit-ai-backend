@@ -23,6 +23,7 @@ import docx2txt
 import requests
 import os
 import mimetypes
+from typing import Optional, Union
 
 # Azure OpenAI imports
 from openai import AzureOpenAI
@@ -70,6 +71,7 @@ class AzureOpenAIAnalyzer:
         try:
             # Configure Azure OpenAI LLM for LlamaIndex
             self.llama_llm = LlamaAzureOpenAI(
+                model="gpt-4o",
                 deployment_name=AZURE_OPENAI_DEPLOYMENT,
                 api_key=AZURE_OPENAI_KEY,
                 azure_endpoint=AZURE_OPENAI_ENDPOINT,
@@ -88,8 +90,8 @@ class AzureOpenAIAnalyzer:
 
             # Configure prompt helper
             self.prompt_helper = PromptHelper(
-                context_window=8192,
-                num_output=3000,
+                context_window=120000,
+                num_output=6000,
                 chunk_overlap_ratio=0.1
             )
 
@@ -192,21 +194,63 @@ class AzureOpenAIAnalyzer:
             st.error(f"Error reading file: {str(e)}")
             return ""
 
-    def create_vector_index(self, text: str) -> Optional[VectorStoreIndex]:
-        """Create vector index from document text"""
+    def create_vector_index(self, text: str, dataframe: Optional[pd.DataFrame] = None) -> Optional[VectorStoreIndex]:
+        """
+        Create vector index from document text and optionally from a pandas DataFrame.
+        
+        Args:
+            text: String containing document text
+            dataframe: Optional pandas DataFrame to include in the index
+            
+        Returns:
+            VectorStoreIndex if successful, None otherwise
+        """
         try:
+            # Validate text input
             if not text or not text.strip():
+                logger.warning("Empty or invalid text provided")
                 return None
+            
+            documents = []
+            
             with st.spinner("Creating vector embeddings..."):
-                # Create document
-                document = Document(text=text)
-                # Parse into nodes
-                nodes = self.node_parser.get_nodes_from_documents([document])
-                logger.info(f"Generated {len(nodes)} nodes from document")
+                # Always create document from text
+                text_document = Document(
+                    text=text,
+                    metadata={"source": "text_input"}
+                )
+                documents.append(text_document)
+                
+                # If DataFrame is provided, add it to documents
+                if dataframe is not None and not dataframe.empty:
+                    logger.info(f"Processing DataFrame with shape {dataframe.shape}")
+                    
+                    # Convert each row of DataFrame to a document
+                    for idx, row in dataframe.iterrows():
+                        text_parts = []
+                        for col, value in row.items():
+                            if pd.notna(value):  # Skip NaN values
+                                text_parts.append(f"{col}: {value}")
+                        
+                        if text_parts:  # Only create document if there's content
+                            row_text = "\n".join(text_parts)
+                            metadata = {
+                                "row_index": idx,
+                                "source": "dataframe"
+                            }
+                            documents.append(Document(text=row_text, metadata=metadata))
+                    
+                    logger.info(f"Added {len(documents) - 1} documents from DataFrame")
+                
+                # Parse all documents into nodes
+                nodes = self.node_parser.get_nodes_from_documents(documents)
+                logger.info(f"Generated {len(nodes)} nodes from {len(documents)} document(s)")
+                
                 # Create vector index
                 vector_index = VectorStoreIndex(nodes)
                 logger.info("Vector index created successfully")
                 return vector_index
+            
         except Exception as e:
             logger.error(f"Failed to create vector index: {str(e)}")
             return None
@@ -489,3 +533,75 @@ class AzureOpenAIAnalyzer:
         return {
             "summary": "AI analysis unavailable - please check Azure OpenAI configuration"
         }
+    
+    def data_extration_ratio_calculation(self, text: str, dataframe: Optional[pd.DataFrame] = None) -> str:
+        """From the provided 10-Q extract and calculate the following into valid JSON"""
+        if not self.client:
+            return "AI analysis unavailable - please check Azure OpenAI configuration"
+
+        if not self.vector_index:
+            self.vector_index = self.create_vector_index(text,dataframe)
+        if not self.vector_index:
+            return "Unable to create vector index for analysis"
+
+        prompt = """
+        You are a financial data extractor. From the provided 10-Q, 10-K, or Nasdaq financials, extract and calculate the following information into a valid JSON object.
+
+        {
+            "Company": "",
+            "Report_Date": "",
+            "Liquidity": {
+                "Cash_and_Equivalents": "",
+                "Total_Current_Assets": "",
+                "Total_Current_Liabilities": "",
+                "Current_Ratio": "Total_Current_Assets / Total_Current_Liabilities",
+                "Operating_Cash_Flow": "",
+                "Liquidity_Runway_Months": "If OCF < 0, then Cash_and_Equivalents / |Operating_Cash_Flow / 12| else 'Not applicable'"
+            },
+            "Leverage": {
+                "Total_Debt": "",
+                "Shareholders_Equity": "",
+                "Debt_to_Equity": "Total_Debt / Shareholders_Equity",
+                "Debt_Maturities": {
+                "2025": "",
+                "2026": "",
+                "2027": "",
+                "2028": "",
+                "2029_and_beyond": ""
+                },
+                "Undrawn_Facilities": ""
+            },
+            "Profitability": {
+                "Revenue": "",
+                "Operating_Income": "",
+                "Net_Income": "",
+                "Operating_Margin": "Operating_Income / Revenue"
+            },
+            "Cash_Flow": {
+                "Operating_Cash_Flow": "",
+                "Capex": "",
+                "Free_Cash_Flow": "Operating_Cash_Flow - Capex"
+            },
+            "Commitments_Contingencies": {
+                "Purchase_Obligations": "",
+                "Legal_Tax_Exposure": ""
+            }
+            }
+
+
+        Rules:
+        Use only exact reported values and preserve the currency units (e.g., millions, thousands).
+
+        Do not invent or assume values; if not disclosed, leave the field as "".
+
+        Perform calculations only if both required inputs are available.
+
+        Return only valid JSON, with no extra commentary, formatting, or text.
+        """
+
+        try:
+            response = self.query_vector_index(prompt, similarity_top_k=2)
+            return response if response else "Unable to extract and calculate ratios"
+        except Exception as e:
+            logger.error(f"Error in data extraction and ratio calculations: {str(e)}")
+            return "Unable to data extraction and ratio calculations due to an error"

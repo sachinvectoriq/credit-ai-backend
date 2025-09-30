@@ -7,6 +7,7 @@ import re
 import requests
 import os
 import Account_Overview
+from pathlib import Path
 from html_account_oveview import account_overview_to_html
 
 from Config_file import logger
@@ -18,9 +19,11 @@ from Financial_Data_Fetcher import (
     display_liquidity_analysis, 
     display_profitability_analysis, 
     display_cashflow_analysis, 
+    display_AI_recommendation,
     generate_print_report,
 
     )
+from query_engine import AI_rec_main
 def main():
     """Main Streamlit app"""
     st.title("CreditIQ - Credit Compliance report with AI")
@@ -33,8 +36,18 @@ def main():
     with col2:
         filing_source = st.radio(
             "Select 10-Q Filing Source:",
-            ("Auto-fetch latest from SEC", "Upload custom file")
+            ("Auto-fetch latest from SEC", "Upload custom file"),
+            index=0,
+            key="filing_source"
         )
+        uploaded_file = None
+        if filing_source == "Upload custom file":
+            uploaded_file = st.file_uploader(
+                "Upload 10-Q Filing",
+                type=["pdf", "docx", "txt"],
+                help="Upload your 10-Q filing in PDF, Word, or Text format",
+                key="filing_upload"
+            )
     with col3:
         Item_List_Source = st.file_uploader(
             "Upload Item  List (Optional)", 
@@ -54,17 +67,17 @@ def main():
 
         # Handle filing source
         analyzer = AzureOpenAIAnalyzer()  # construct once
-        if filing_source == "Upload custom file":
-            uploaded_file = st.file_uploader(
-                "Upload 10-Q Filing", 
-                type=["pdf", "docx", "txt"],
-                help="Upload your 10-Q filing in PDF, Word, or Text format"
-            )
-            if uploaded_file:
-                with st.spinner("Extracting text from uploaded document..."):
-                    raw_text = analyzer.extract_text_from_file(uploaded_file, filename=getattr(uploaded_file, "name", None), file_type=getattr(uploaded_file, "type", None))
-                if raw_text:
-                    st.success("Document uploaded and processed successfully!")
+        # if filing_source == "Upload custom file":
+        #     uploaded_file = st.file_uploader(
+        #         "Upload 10-Q Filing", 
+        #         type=["pdf", "docx", "txt"],
+        #         help="Upload your 10-Q filing in PDF, Word, or Text format"
+        #     )
+        if uploaded_file:
+            with st.spinner("Extracting text from uploaded document..."):
+                raw_text = analyzer.extract_text_from_file(uploaded_file, filename=getattr(uploaded_file, "name", None), file_type=getattr(uploaded_file, "type", None))
+            if raw_text:
+                st.success("Document uploaded and processed successfully!")
         else:
             # Auto-fetch from SEC
             if ticker:
@@ -94,6 +107,7 @@ def main():
                         pdf_url = f"https://www.sec.gov/Archives/edgar/data/{CIK}/{acc_num}/{doc_name.replace('.htm', '.pdf')}"
 
                         pdf_response = requests.get(pdf_url, headers=headers)
+                        # AI_rec_main(html_url)
 
                         if pdf_response.status_code == 200:
                             pdf_file = io.BytesIO(pdf_response.content)
@@ -101,7 +115,7 @@ def main():
                             # Fallback to HTML -> PDF conversion (best-effort)
                             html_content = requests.get(html_url, headers=headers).content.decode("utf-8", errors="ignore")
                             html_content = re.sub(r'<img[^>]*>', '', html_content)
-                            html_content = re.sub(r'<table[^>]*>.*?</table>', '', html_content, flags=re.DOTALL)
+                            # html_content = re.sub(r'<table[^>]*>.*?</table>', '', html_content, flags=re.DOTALL)
                             try:
                                 from xhtml2pdf import pisa
                                 pdf_buffer = io.BytesIO()
@@ -117,6 +131,8 @@ def main():
                 except Exception as e:
                     st.error(f"Failed to fetch 10-Q from SEC: {e}")
         #Converting Item List and Payment History to DataFrame
+
+        
         
         if Item_List_Source and Payment_History_source:
             try:
@@ -138,6 +154,7 @@ def main():
         if ticker and (raw_text or pdf_file):
             try:
                 fetcher = FinancialDataFetcher(ticker)
+                finincial_statements_dataframe = fetcher.get_financial_statements()
 
                 # Extract text from PDF if needed (pass explicit file_type to avoid .type error)
                 if not raw_text and pdf_file:
@@ -168,6 +185,11 @@ def main():
                 with st.spinner("Analyzing cash flow using AI"):
                     cashflow_analysis = analyzer.analyze_cashflow(raw_text)
 
+                with st.spinner("Analysing AI Recommendation form 10q"):
+                     AI_rec_main(html_url)
+                
+                AI_Recommendation = Path("financial_analysis_output\step4_extractred_summary.txt").read_text(encoding="utf-8")
+
                 # account_overview_html = ""
                 # if 'item_list_df' in locals() and 'payment_history_df' in locals():
                 #     try:
@@ -194,7 +216,7 @@ def main():
                 
 
                 # Main tabs for interactive display - Added Cash Flow tab
-                tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Financial Statements", "Risk Analysis", "Liquidity", "Profitability", "Cash Flow", "Account Overview"])
+                tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Financial Statements", "Risk Analysis", "Liquidity", "Profitability", "Cash Flow", "Account Overview", "AI Recommendation"])
 
                 with tab1:
                     display_financial_statements(financial_data, ticker)
@@ -212,6 +234,8 @@ def main():
                     display_cashflow_analysis(cashflow_analysis)
                 with tab6:
                     Account_Overview.main(item_list_df,payment_history_df)
+                with tab7:
+                    display_AI_recommendation("financial_analysis_output\step4_extractred_summary.txt")
 
                 # Generate full report for download
                 st.markdown("---")
@@ -224,7 +248,8 @@ def main():
                     'liquidity_analysis': liquidity_analysis.replace('\n', '<br>'),
                     'profitability_analysis': profitability_analysis.replace('\n', '<br>'),
                     'cashflow_analysis': cashflow_analysis.replace('\n', '<br>'),
-                    'account_overview': account_overview_to_html(item_list_df, payment_history_df)
+                    'account_overview': account_overview_to_html(item_list_df, payment_history_df),
+                    'AI_Recommendation': AI_Recommendation
                     # 'Account_Overview': Acc_Over_html
                 }
                 report_html = generate_print_report(ticker, all_html)

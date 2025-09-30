@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 # import io
 # import base64
 from typing import Dict, List, Optional, Tuple
+from pathlib import Path
 # import json
 # import re
 # import logging
@@ -765,6 +766,21 @@ def display_cashflow_analysis(cashflow_data: str):
     </div>
     """, unsafe_allow_html=True)
 
+def display_AI_recommendation(file_path:str):
+    """Display AI-Recommendation"""
+    st.header("AI-Recommendation")
+    st.caption("AI-generated analysis from 10-Q document")
+
+    st.markdown(
+        f"""
+        <div class="ai-summary">
+            {Path(file_path).read_text(encoding="utf-8")}
+        </div>
+        """, unsafe_allow_html=True)
+
+
+
+
 def generate_print_report(ticker: str, all_data: Dict) -> str:
     """Generate HTML report for printing"""
     current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -860,6 +876,12 @@ def generate_print_report(ticker: str, all_data: Dict) -> str:
         </div>
         <div class="analysis-section">
             {all_data.get('account_overview', '<p>Account Overview data not available</p>')}
+        </div>
+        <div class="section-header">
+            <h2>6. AI_Recommendation</h2>
+        </div>
+        <div class="analysis-section">
+            {all_data['AI_Recommendation']}
         </div>
     </body>
     </html>
