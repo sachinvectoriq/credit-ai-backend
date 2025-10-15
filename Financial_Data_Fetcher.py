@@ -96,12 +96,13 @@ class FinancialDataFetcher:
             ("Working Capital", None, "calculated"),
             ("", None, "blank"),
             ("Liabilities:", None, "subsection"),
-            ("Short-Term Debt", "Short Term Debt", "item"),
+            ("Short-Term Debt", "Current Debt", "item"),
             ("Accounts Payable", "Accounts Payable", "item"),
+            ("Other Current Liabilities", "Other Current Liabilities","item"),
             ("Current Liabilities", "Current Liabilities", "item"),
             ("Long-Term Debt", "Long Term Debt", "item"),
             ("Total Liabilities", "Total Liabilities Net Minority Interest", "item"),
-            ("Net Worth (OE)", None, "calculated"),
+            ("Stockholders Equity", "Stockholders Equity", "item"),
             ("", None, "blank"),
             ("Ratios:", None, "subsection"),
             ("Current Ratio", None, "ratio"),
@@ -121,7 +122,7 @@ class FinancialDataFetcher:
             if "quarterly_balance_sheet" in data and data["quarterly_balance_sheet"] is not None:
                 qbs = data["quarterly_balance_sheet"]
                 if not qbs.empty and field_name:
-                    matching_fields = [idx for idx in qbs.index if field_name.lower() in str(idx).lower()]
+                    matching_fields = [idx for idx in qbs.index if str(idx).strip().lower() == str(field_name).strip().lower()]
                     if matching_fields:
                         field_to_use = matching_fields[0]
                         for i in range(min(3, len(qbs.columns))):
@@ -137,7 +138,7 @@ class FinancialDataFetcher:
             if "annual_balance_sheet" in data and data["annual_balance_sheet"] is not None:
                 abs_data = data["annual_balance_sheet"]
                 if not abs_data.empty and field_name:
-                    matching_fields = [idx for idx in abs_data.index if field_name.lower() in str(idx).lower()]
+                    matching_fields = [idx for idx in abs_data.index if str(idx).strip().lower() == str(field_name).strip().lower()]
                     if matching_fields:
                         field_to_use = matching_fields[0]
                         for i in range(min(3, len(abs_data.columns))):
@@ -186,8 +187,8 @@ class FinancialDataFetcher:
             ("Tax", "Tax Provision", "item"),
             ("Net Income", "Net Income", "item"),
             ("Net Margin %", None, "calculated"),
-            ("EPS Basic", "Basic EPS", "item"),
-            ("EPS Diluted", "Diluted EPS", "item"),
+            # ("EPS Basic", "Basic EPS", "item"),
+            # ("EPS Diluted", "Diluted EPS", "item"),
         ]
 
         for item_name, field_name, item_type in income_items:
@@ -201,7 +202,7 @@ class FinancialDataFetcher:
             if "quarterly_income" in data and data["quarterly_income"] is not None:
                 qi = data["quarterly_income"]
                 if not qi.empty and field_name:
-                    matching_fields = [idx for idx in qi.index if field_name.lower() in str(idx).lower()]
+                    matching_fields = [idx for idx in qi.index if str(idx).strip().lower() == str(field_name).strip().lower()]
                     if matching_fields:
                         field_to_use = matching_fields[0]
                         for i in range(min(3, len(qi.columns))):
@@ -217,7 +218,7 @@ class FinancialDataFetcher:
             if "annual_income" in data and data["annual_income"] is not None:
                 ai = data["annual_income"]
                 if not ai.empty and field_name:
-                    matching_fields = [idx for idx in ai.index if field_name.lower() in str(idx).lower()]
+                    matching_fields = [idx for idx in ai.index if str(idx).strip().lower() == str(field_name).strip().lower()]
                     if matching_fields:
                         field_to_use = matching_fields[0]
                         for i in range(min(3, len(ai.columns))):
@@ -282,7 +283,7 @@ class FinancialDataFetcher:
             if "quarterly_cashflow" in data and data["quarterly_cashflow"] is not None:
                 qcf = data["quarterly_cashflow"]
                 if not qcf.empty and field_name:
-                    matching_fields = [idx for idx in qcf.index if field_name.lower() in str(idx).lower()]
+                    matching_fields = [idx for idx in qcf.index if str(idx).strip().lower() == str(field_name).strip().lower()]
                     if matching_fields:
                         field_to_use = matching_fields[0]
                         for i in range(min(3, len(qcf.columns))):
@@ -294,7 +295,7 @@ class FinancialDataFetcher:
             if "annual_cashflow" in data and data["annual_cashflow"] is not None:
                 acf = data["annual_cashflow"]
                 if not acf.empty and field_name:
-                    matching_fields = [idx for idx in acf.index if field_name.lower() in str(idx).lower()]
+                    matching_fields = [idx for idx in acf.index if str(idx).strip().lower() == str(field_name).strip().lower()]
                     if matching_fields:
                         field_to_use = matching_fields[0]
                         for i in range(min(3, len(acf.columns))):
@@ -878,7 +879,7 @@ def generate_print_report(ticker: str, all_data: Dict) -> str:
             {all_data.get('account_overview', '<p>Account Overview data not available</p>')}
         </div>
         <div class="section-header">
-            <h2>6. AI_Recommendation</h2>
+            <h2>6. AI Recommendation</h2>
         </div>
         <div class="analysis-section">
             {all_data['AI_Recommendation']}

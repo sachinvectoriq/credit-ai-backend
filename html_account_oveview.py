@@ -59,13 +59,13 @@ def account_overview_to_html(item_list_df:pd.DataFrame, payment_history_df:pd.Da
             Invoice_paid_2006 = payment_history_df['Amt Applied to Customer'].count()
             
             payment_history_df['Payment Date'] = pd.to_datetime(payment_history_df['Payment Date'], errors="coerce")
-            L3M_Paid_90 = payment_history_df.loc[payment_history_df["Payment Date"] >= cutoff_90, "Amt Applied to Customer"].sum()
-            LTM_Paid_365 = payment_history_df.loc[payment_history_df["Payment Date"] >= cutoff_365, "Amt Applied to Customer"].sum()
-            Amount_paid_2006 = payment_history_df["Amt Applied to Customer"].sum()
+            L3M_Paid_90 = payment_history_df.loc[payment_history_df["Payment Date"] >= cutoff_90, "Amt Applied to Customer"].sum().round(0)
+            LTM_Paid_365 = payment_history_df.loc[payment_history_df["Payment Date"] >= cutoff_365, "Amt Applied to Customer"].sum().round(0)
+            Amount_paid_2006 = payment_history_df["Amt Applied to Customer"].sum().round(0)
             
-            L3L_averageDPD__90 = payment_history_df.loc[payment_history_df["Payment Date"] >= cutoff_90, "Days Past Due"].mean()
-            LTM_averageDPD_365 = payment_history_df.loc[payment_history_df["Payment Date"] >= cutoff_365, "Days Past Due"].mean()
-            Average_DPD_2006 = payment_history_df["Days Past Due"].mean()
+            L3L_averageDPD__90 = payment_history_df.loc[payment_history_df["Payment Date"] >= cutoff_90, "Days Past Due"].mean().round(0)
+            LTM_averageDPD_365 = payment_history_df.loc[payment_history_df["Payment Date"] >= cutoff_365, "Days Past Due"].mean().round(0)
+            Average_DPD_2006 = payment_history_df["Days Past Due"].mean().round(0)
             
             total_credits = item_list_df.query('`Item Balance` < 0')['Item Balance'].sum()
             
@@ -81,7 +81,7 @@ def account_overview_to_html(item_list_df:pd.DataFrame, payment_history_df:pd.Da
             else:
                 mask = df['Payment Date'].dt.normalize().eq(last_ts.normalize())
                 Last_Payment = last_ts.strftime('%m-%d-%Y')
-                Last_Payment_Date_Amount = df.loc[mask, 'Amt Applied to Customer'].sum()
+                Last_Payment_Date_Amount = df.loc[mask, 'Amt Applied to Customer'].sum().round(0)
             
             Net_terms = payment_history_df['Terms'].iloc[0] if not payment_history_df.empty else "N/A"
             
@@ -111,21 +111,21 @@ def account_overview_to_html(item_list_df:pd.DataFrame, payment_history_df:pd.Da
                     </tr>
                     <tr>
                         <td><strong>$ Paid</strong></td>
-                        <td>${L3M_Paid_90:,.2f}</td>
-                        <td>${LTM_Paid_365:,.2f}</td>
-                        <td>${Amount_paid_2006:,.2f}</td>
-                        <td><strong>Amount:</strong> ${Last_Payment_Date_Amount:,.2f}</td>
+                        <td>${L3M_Paid_90}</td>
+                        <td>${LTM_Paid_365}</td>
+                        <td>${Amount_paid_2006}</td>
+                        <td><strong>Amount:</strong> ${Last_Payment_Date_Amount}</td>
                     </tr>
                     <tr>
                         <td><strong>Average DPD</strong></td>
-                        <td>{L3L_averageDPD__90:.2f}</td>
-                        <td>{LTM_averageDPD_365:.2f}</td>
-                        <td>{Average_DPD_2006:.2f}</td>
+                        <td>{L3L_averageDPD__90}</td>
+                        <td>{LTM_averageDPD_365}</td>
+                        <td>{Average_DPD_2006}</td>
                         <td><strong>Net Terms:</strong> {Net_terms}</td>
                     </tr>
                     <tr>
                         <td colspan="4"></td>
-                        <td><strong>Total Credits:</strong> ${total_credits:,.2f}</td>
+                        <td><strong>Total Credits:</strong> ${total_credits}</td>
                     </tr>
                 </tbody>
             </table>

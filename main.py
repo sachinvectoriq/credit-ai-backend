@@ -189,6 +189,7 @@ def main():
                      AI_rec_main(html_url)
                 
                 AI_Recommendation = Path("financial_analysis_output\step4_extractred_summary.txt").read_text(encoding="utf-8")
+                
 
                 # account_overview_html = ""
                 # if 'item_list_df' in locals() and 'payment_history_df' in locals():
@@ -249,7 +250,7 @@ def main():
                     'profitability_analysis': profitability_analysis.replace('\n', '<br>'),
                     'cashflow_analysis': cashflow_analysis.replace('\n', '<br>'),
                     'account_overview': account_overview_to_html(item_list_df, payment_history_df),
-                    'AI_Recommendation': AI_Recommendation
+                    'AI_Recommendation': AI_Recommendation.replace('\n', '<br>')
                     # 'Account_Overview': Acc_Over_html
                 }
                 report_html = generate_print_report(ticker, all_html)

@@ -1,5 +1,11 @@
 import pandas as pd
-# 🔹 Add this where you define your tabs (append "Account Overview" to your existing list)
+import re
+import math
+from typing import Any
+
+
+# 🔹 Add this where yo
+# u define your tabs (append "Account Overview" to your existing list)
 # Example:
 # tabs = st.tabs(["Risk Analysis", "Liquidity", "Profitability", "Account Overview"])
 # If you already have `tabs = st.tabs([...])`, just include "Account Overview" at the end and keep the variable name the same.
@@ -63,6 +69,37 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
         index=row_labels,
         columns = col_headers
     )
+    # def value, decimals=0):
+    #     """
+    #     Format a numeric value with commas (e.g. 31983000 -> '31,983,000').
+
+    #     Args:
+    #         value: int, float, or numeric string
+    #         decimals: number of decimal places to display (default 0)
+
+    #     Returns:
+    #         str: formatted number with commas (e.g. '31,983,000' or '31,983,000.25')
+    #     """
+    #     try:
+    #         if pd.isna(value):
+    #             return "-"
+    #         value = float(value)
+    #         return f"{value:,.{decimals}f}"
+    #     except (ValueError, TypeError):
+    #         return str(value)
+        
+    # def  value) -> str:
+    #     """Format financial values"""
+    #     if pd.isna(value) or value is None:
+    #         return "-"
+    #     # Convert to thousands
+    #     value = value / 1000
+    #     if value < 0:
+    #         return f"$({abs(value):,.0f})"
+    #     else:
+    #         return f"${value:,.0f}"
+
+
 
     # 👉 If you already compute values elsewhere, just assign them into `account_overview_df`
     # Example (pseudo):
@@ -72,9 +109,9 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["OSC01", "1-30"] = Iteam_List_df.query('Unit == "OCS01" and `Days Late` > 0 and `Days Late` <= 30')['Item Balance'].sum().round(2)
     account_overview_df.loc["OSC01", "31-60"] = Iteam_List_df.query('Unit == "OCS01" and `Days Late` > 30 and `Days Late` <= 60')['Item Balance'].sum().round(2)
     account_overview_df.loc["OSC01", "61-90"] = Iteam_List_df.query('Unit == "OCS01" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
-    account_overview_df.loc["OSC01", "91-180"] = Iteam_List_df.query('Unit == "OCS01" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
+    account_overview_df.loc["OSC01", "91-180"] =Iteam_List_df.query('Unit == "OCS01" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["OSC01", "181+"] = Iteam_List_df.query('Unit == "OCS01" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["OSC01", "Total"] = account_overview_df.loc["OSC01", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["OSC01", "Total"] = account_overview_df.loc["OSC01", col_headers[:-1]].sum().round(2)
 
     # Assigning values to OSC03.
     account_overview_df.loc["OCS03", "Current"] = Iteam_List_df.query('Unit == "OCS03" and `Days Late` <= 0')['Item Balance'].sum().round(2)
@@ -83,16 +120,16 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["OCS03", "61-90"] = Iteam_List_df.query('Unit == "OCS03" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["OCS03", "91-180"] = Iteam_List_df.query('Unit == "OCS03" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["OCS03", "181+"] = Iteam_List_df.query('Unit == "OCS03" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["OCS03", "Total"] = account_overview_df.loc["OCS03", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["OCS03", "Total"] = account_overview_df.loc["OCS03", col_headers[:-1]].sum().round(2)
 
-    # Assigning values to Avaiation.
+    # Assigning values to Avaiation.)
     account_overview_df.loc["Aviation", "Current"] = Iteam_List_df.query('Unit == "OAV01" and `Days Late` <= 0')['Item Balance'].sum().round(2)
     account_overview_df.loc["Aviation", "1-30"] = Iteam_List_df.query('Unit == "OAV01" and `Days Late` > 0 and `Days Late` <= 30')['Item Balance'].sum().round(2)
     account_overview_df.loc["Aviation", "31-60"] = Iteam_List_df.query('Unit == "OAV01" and `Days Late` > 30 and `Days Late` <= 60')['Item Balance'].sum().round(2)
     account_overview_df.loc["Aviation", "61-90"] = Iteam_List_df.query('Unit == "OAV01" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["Aviation", "91-180"] = Iteam_List_df.query('Unit == "OAV01" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["Aviation", "181+"] = Iteam_List_df.query('Unit == "OAV01" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["Aviation", "Total"] = account_overview_df.loc["Aviation", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["Aviation", "Total"] = account_overview_df.loc["Aviation", col_headers[:-1]].sum().round(2)
 
     # Assigning values to SJA01.
     account_overview_df.loc["SJA01", "Current"] = Iteam_List_df.query('Unit == "SJA01" and `Days Late` <= 0')['Item Balance'].sum().round(2)
@@ -101,16 +138,16 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["SJA01", "61-90"] = Iteam_List_df.query('Unit == "SJA01" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["SJA01", "91-180"] = Iteam_List_df.query('Unit == "SJA01" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["SJA01", "181+"] = Iteam_List_df.query('Unit == "SJA01" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["SJA01", "Total"] = account_overview_df.loc["SJA01", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["SJA01", "Total"] = account_overview_df.loc["SJA01", col_headers[:-1]].sum().round(2)
 
-    # Assigning values to CE.
+    # Assigning values to CE."{:,.0f}".format(
     account_overview_df.loc["CE", "Current"] = Iteam_List_df.query('Unit == "OCS02" and `Days Late` <= 0')['Item Balance'].sum().round(2)
     account_overview_df.loc["CE", "1-30"] = Iteam_List_df.query('Unit == "OCS02" and `Days Late` > 0 and `Days Late` <= 30')['Item Balance'].sum().round(2)
     account_overview_df.loc["CE", "31-60"] = Iteam_List_df.query('Unit == "OCS02" and `Days Late` > 30 and `Days Late` <= 60')['Item Balance'].sum().round(2)
     account_overview_df.loc["CE", "61-90"] = Iteam_List_df.query('Unit == "OCS02" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["CE", "91-180"] = Iteam_List_df.query('Unit == "OCS02" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["CE", "181+"] = Iteam_List_df.query('Unit == "OCS02" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["CE", "Total"] = account_overview_df.loc["CE", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["CE", "Total"] = account_overview_df.loc["CE", col_headers[:-1]].sum().round(2)
 
     # Assigning values to Scientific.
     account_overview_df.loc["Scientific", "Current"] = Iteam_List_df.query('Unit == "ASC01" and `Days Late` <= 0')['Item Balance'].sum().round(2)
@@ -119,7 +156,7 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["Scientific", "61-90"] = Iteam_List_df.query('Unit == "ASC01" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["Scientific", "91-180"] = Iteam_List_df.query('Unit == "ASC01" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["Scientific", "181+"] = Iteam_List_df.query('Unit == "ASC01" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["Scientific", "Total"] = account_overview_df.loc["Scientific", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["Scientific", "Total"] = account_overview_df.loc["Scientific", col_headers[:-1]].sum().round(2)
 
     # Assigning values to Services.
     account_overview_df.loc["Services", "Current"] = Iteam_List_df.query('Unit == "INP01" and `Days Late` <= 0')['Item Balance'].sum().round(2)
@@ -128,7 +165,7 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["Services", "61-90"] = Iteam_List_df.query('Unit == "INP01" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["Services", "91-180"] = Iteam_List_df.query('Unit == "INP01" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["Services", "181+"] = Iteam_List_df.query('Unit == "INP01" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["Services", "Total"] = account_overview_df.loc["Services", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["Services", "Total"] = account_overview_df.loc["Services", col_headers[:-1]].sum().round(2)
 
     # Assigning values to Actalent Canada.
     account_overview_df.loc["Actalent Canada", "Current"] = Iteam_List_df.query('Unit == "CACOR" and `Days Late` <= 0')['Item Balance'].sum().round(2)
@@ -137,7 +174,7 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["Actalent Canada", "61-90"] = Iteam_List_df.query('Unit == "CACOR" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["Actalent Canada", "91-180"] = Iteam_List_df.query('Unit == "CACOR" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["Actalent Canada", "181+"] = Iteam_List_df.query('Unit == "CACOR" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["Actalent Canada", "Total"] = account_overview_df.loc["Actalent Canada", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["Actalent Canada", "Total"] = account_overview_df.loc["Actalent Canada", col_headers[:-1]].sum().round(2)
 
     # Assigning values to Services_EASCA.
     account_overview_df.loc["Services_EASCA", "Current"] = Iteam_List_df.query('Unit == "EASCA" and `Days Late` <= 0')['Item Balance'].sum().round(2)
@@ -146,7 +183,7 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["Services_EASCA", "61-90"] = Iteam_List_df.query('Unit == "EASCA" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["Services_EASCA", "91-180"] = Iteam_List_df.query('Unit == "EASCA" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["Services_EASCA", "181+"] = Iteam_List_df.query('Unit == "EASCA" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["Services_EASCA", "Total"] = account_overview_df.loc["Services_EASCA", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["Services_EASCA", "Total"] = account_overview_df.loc["Services_EASCA", col_headers[:-1]].sum().round(2)
 
     # Assigning values to Aerotek Canada.
     account_overview_df.loc["Aerotek Canada", "Current"] = Iteam_List_df.query('Unit == "CAIND" and `Days Late` <= 0')['Item Balance'].sum().round(2)
@@ -155,7 +192,7 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["Aerotek Canada", "61-90"] = Iteam_List_df.query('Unit == "CAIND" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["Aerotek Canada", "91-180"] = Iteam_List_df.query('Unit == "CAIND" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["Aerotek Canada", "181+"] = Iteam_List_df.query('Unit == "CAIND" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["Aerotek Canada", "Total"] = account_overview_df.loc["Aerotek Canada", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["Aerotek Canada", "Total"] = account_overview_df.loc["Aerotek Canada", col_headers[:-1]].sum().round(2)
 
     # Assigning values to Aston Carter Canada.
     account_overview_df.loc["Aston Carter Canada", "Current"] = Iteam_List_df.query('Unit == "CAAC1" and `Days Late` <= 0')['Item Balance'].sum().round(2)
@@ -164,7 +201,7 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["Aston Carter Canada", "61-90"] = Iteam_List_df.query('Unit == "CAAC1" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["Aston Carter Canada", "91-180"] = Iteam_List_df.query('Unit == "CAAC1" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["Aston Carter Canada", "181+"] = Iteam_List_df.query('Unit == "CAAC1" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["Aston Carter Canada", "Total"] = account_overview_df.loc["Aston Carter Canada", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["Aston Carter Canada", "Total"] = account_overview_df.loc["Aston Carter Canada", col_headers[:-1]].sum().round(2)
 
     # Assigning values to MLA/IEL.
     account_overview_df.loc["MLA/IEL", "Current"] = Iteam_List_df.query('Unit == "IELO1" and `Days Late` <= 0')['Item Balance'].sum().round(2)
@@ -173,7 +210,7 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["MLA/IEL", "61-90"] = Iteam_List_df.query('Unit == "IELO1" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["MLA/IEL", "91-180"] = Iteam_List_df.query('Unit == "IELO1" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["MLA/IEL", "181+"] = Iteam_List_df.query('Unit == "IELO1" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["MLA/IEL", "Total"] = account_overview_df.loc["MLA/IEL", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["MLA/IEL", "Total"] = account_overview_df.loc["MLA/IEL", col_headers[:-1]].sum().round(2)
 
     # Assigning values to Teksystems.
     account_overview_df.loc["Teksystems", "Current"] = Iteam_List_df.query('Unit == "TEK01" and `Days Late` <= 0')['Item Balance'].sum().round(2)
@@ -182,7 +219,7 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["Teksystems", "61-90"] = Iteam_List_df.query('Unit == "TEK01" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["Teksystems", "91-180"] = Iteam_List_df.query('Unit == "TEK01" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["Teksystems", "181+"] = Iteam_List_df.query('Unit == "TEK01" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["Teksystems", "Total"] = account_overview_df.loc["Teksystems", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["Teksystems", "Total"] = account_overview_df.loc["Teksystems", col_headers[:-1]].sum().round(2)
 
     # assigning values to Tek Global.
     account_overview_df.loc["Tek Global", "Current"] = Iteam_List_df.query('Unit == "TKC01" and `Days Late` <= 0')['Item Balance'].sum().round(2)
@@ -191,7 +228,7 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["Tek Global", "61-90"] = Iteam_List_df.query('Unit == "TKC01" and `Days Late` > 60 and `Days Late` <= 90')['Item Balance'].sum().round(2)
     account_overview_df.loc["Tek Global", "91-180"] = Iteam_List_df.query('Unit == "TKC01" and `Days Late` > 90 and `Days Late` <= 180')['Item Balance'].sum().round(2)
     account_overview_df.loc["Tek Global", "181+"] = Iteam_List_df.query('Unit == "TKC01" and `Days Late` > 180')['Item Balance'].sum().round(2)
-    account_overview_df.loc["Tek Global", "Total"] = account_overview_df.loc["Tek Global", col_headers[:-2]].sum().round(2)
+    account_overview_df.loc["Tek Global", "Total"] = account_overview_df.loc["Tek Global", col_headers[:-1]].sum().round(2)
 
     # Assigning values to Totals.
     account_overview_df.loc["Totals", "Current"] = account_overview_df.loc[num_rows_lables, "Current"].sum().round(2)
@@ -200,6 +237,10 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
     account_overview_df.loc["Totals", "61-90"] = account_overview_df.loc[num_rows_lables, "61-90"].sum().round(2)
     account_overview_df.loc["Totals", "91-180"] = account_overview_df.loc[num_rows_lables, "91-180"].sum().round(2)
     account_overview_df.loc["Totals", "181+"] = account_overview_df.loc[num_rows_lables, "181+"].sum().round(2)
+    account_overview_df.loc["Totals", "Total"] = account_overview_df.loc[num_rows_lables, "Total"].sum().round(2)
+
+    # Only format numeric values, leave strings as they are
+    account_overview_df = account_overview_df.applymap(lambda x: f'{x:,.2f}' if isinstance(x, (int, float)) else x)
 
 
 
@@ -325,10 +366,10 @@ def main(Iteam_List_df: pd.DataFrame, Payment_History_df: pd.DataFrame)-> pd.Dat
         # Row: Average DPD
         c1, c2, c3, c4, c5 = st.columns([1.2, 1, 1, 1.2, 1.6])
         c1.markdown("**Average DPD**")
-        c2.markdown(L3L_averageDPD__90.round(2))
-        c3.markdown(LTM_averageDPD_365.round(2))
-        c4.markdown(Average_DPD_2006.round(2))
-        c5.markdown("**Total Credits:** " f"${total_credits:,.2f}")
+        c2.markdown(L3L_averageDPD__90)
+        c3.markdown(LTM_averageDPD_365)
+        c4.markdown(Average_DPD_2006)
+        c5.markdown("**Total Credits:** " f"${total_credits}")
     return account_overview_df
  
     
