@@ -254,6 +254,8 @@ class FinancialDataFetcher:
             ("Operating Activities:", None, "subsection"),
             ("Net Income", "Net Income", "item"),
             ("Depreciation", "Depreciation And Amortization", "item"),
+            ("Accounts Receivable", "Changes in Account Receivables", "item"),
+            ("Change in Inventory", "Change in Inventory", "item"),
             ("Working Capital Changes", "Change In Working Capital", "item"),
             ("Operating Cash Flow", "Operating Cash Flow", "item"),
             ("", None, "blank"),

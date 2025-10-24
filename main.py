@@ -23,6 +23,12 @@ from Financial_Data_Fetcher import (
     generate_print_report,
 
     )
+
+from FinancialStatement_API import (
+    Financial_api,
+    
+
+)
 from query_engine import AI_rec_main
 def main():
     """Main Streamlit app"""
@@ -154,6 +160,7 @@ def main():
         if ticker and (raw_text or pdf_file):
             try:
                 fetcher = FinancialDataFetcher(ticker)
+                fetcher_api = Financial_api(ticker)
                 finincial_statements_dataframe = fetcher.get_financial_statements()
 
                 # Extract text from PDF if needed (pass explicit file_type to avoid .type error)
@@ -209,10 +216,15 @@ def main():
 
                 # Prepare HTML snippets for print
                 # Financial tables
-                bal_html = fetcher.format_financial_table(financial_data).to_html(index=False, escape=False, na_rep="")
-                inc_html = fetcher.format_income_statement(financial_data).to_html(index=False, escape=False, na_rep="")
-                cf_html = fetcher.format_cash_flow(financial_data).to_html(index=False, escape=False, na_rep="")
-                tables_html = f"<h3>Balance Sheet</h3>{bal_html}<h3>Income Statement</h3>{inc_html}<h3>Cash Flow</h3>{cf_html}"
+                # bal_html = fetcher.format_financial_table(financial_data).to_html(index=False, escape=False, na_rep="")
+                bal_html = fetcher_api.get_balance_sheet().to_html(index=True, escape=False, na_rep="")
+                # inc_html = fetcher.format_income_statement(financial_data).to_html(index=False, escape=False, na_rep="")
+                inc_html = fetcher_api.get_income_statement().to_html(index=True, escape=False, na_rep="")
+                # cf_html = fetcher.format_cash_flow(financial_data).to_html(index=False, escape=False, na_rep="")
+                cf_html = fetcher_api.get_cash_flow().to_html(index=True, escape=False, na_rep="")
+                # ratios_html = fetcher.format_financial_ratios(financial_data).to_html(index=False, escape=False, na_rep="")
+                ratios_html = fetcher_api.get_financial_ratios().to_html(index=True, escape=False, na_rep="")
+                tables_html = f"<h3>Balance Sheet</h3>{bal_html}<h3>Ratios</h3>{ratios_html}<h3>Income Statement</h3>{inc_html}<h3>Cash Flow</h3>{cf_html}"
                 # Acc_Over_html = Account_Overview.main(item_list_df,payment_history_df).to_html(index=False, escape=False, na_rep="")
                 
 
